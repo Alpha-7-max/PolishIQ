@@ -3,146 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PolishIQ</title>
+    <title>PolishIQ - AI Text Enhancer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif; /* A clean, modern font */
+            font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar for a more refined look */
+        /* Custom scrollbar for textareas */
         textarea::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         textarea::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.5); /* slate-800 with opacity */
             border-radius: 10px;
         }
         textarea::-webkit-scrollbar-thumb {
-            background: rgba(14, 165, 233, 0.6); /* cyan-600 with opacity */
+            background: rgba(219, 39, 119, 0.7); /* pink-600 with opacity */
             border-radius: 10px;
+            border: 2px solid rgba(30, 41, 59, 0.5); 
         }
         textarea::-webkit-scrollbar-thumb:hover {
-            background: rgba(14, 165, 233, 0.8); /* cyan-500 with opacity */
+            background: rgba(219, 39, 119, 0.9); /* pink-500 with opacity */
         }
+
+        /* Shine effect for buttons */
         @keyframes subtleShine {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
         .shine-button {
-            background-size: 200% 200%;
+            background-size: 250% 250%;
         }
-        .shine-button:hover {
-            animation: subtleShine 3s ease infinite;
+        .shine-button:hover:not(:disabled) {
+            animation: subtleShine 3s ease-out infinite;
         }
 
+        /* Skeleton loader animation */
         .skeleton-loader {
             animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-
         @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: .5;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
         }
         
-        /* Custom focus ring to match theme - excluding output textarea */
-        textarea:not(#outputText):focus, button:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.7); /* More visible focus ring */
-            border-color: rgba(56, 189, 248, 0.7);
+        /* Custom select arrow for the <select> element */
+        .custom-select-arrow {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23f9a8d4'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E"); /* pink-300 */
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 3rem; /* Make space for arrow */
         }
-        /* Remove focus styles from output textarea */
-        #outputText:focus {
-            outline: none;
-            box-shadow: none;
+
+        /* Styling for individual <option> elements within the select dropdown */
+        select option {
+            background-color: #0f172a; /* slate-900 */
+            color: #cbd5e1;           /* slate-300 */
+            padding: 12px 18px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #1e293b; /* slate-800 */
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
+        select option:last-child {
+            border-bottom: none;
+        }
+        select option:hover,
+        select option:focus {
+            background-color: #581c87; /* purple-800 */
+            color: #f5d0fe;           /* purple-200 */
+            cursor: pointer;
+        }
+
+        /* Animated gradient border for main card */
+        .aurora-border-container {
+            position: relative; padding: 2px; border-radius: 1.15rem; 
+            background: linear-gradient(120deg, #ec4899, #8b5cf6, #06b6d4, #ec4899);
+            background-size: 300% 300%; animation: majesticAurora 10s linear infinite; z-index: 0;
+        }
+        @keyframes majesticAurora {
+            0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
+        }
+        .aurora-border-container > div { border-radius: 1rem; }
+
+        /* Toast animations */
+        .toast-enter { opacity: 0; transform: translateY(20px) scale(0.95); }
+        .toast-enter-active { opacity: 1; transform: translateY(0) scale(1); transition: opacity 300ms ease-out, transform 300ms ease-out; }
+        .toast-exit { opacity: 1; transform: translateX(0); }
+        .toast-exit-active { opacity: 0; transform: translateX(100%); transition: opacity 300ms ease-in, transform 300ms ease-in; }
+
+        /* --- UPDATED FOCUS STYLES --- */
+        #outputText:focus { /* Output textarea has specific no-focus-ring requirement */
+            outline: none; box-shadow: none; border-color: #334155; /* slate-700 (its original border color) */
+        }
+
+        /* Professional focus for text inputs and selects */
+        textarea#inputText:focus,
+        select#enhanceMode:focus {
+            outline: none;
+            border-color: #38bdf8; /* sky-400 */
+            box-shadow: 0 0 0 1px #38bdf8; /* sky-400, 1px ring */
+        }
+
+        /* Focus for primary action buttons */
+        button#enhanceButton:focus {
+            outline: none;
+            border-color: #ec4899; /* pink-500, a main accent color */
+            box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.4); /* pink-500 with opacity (40%) for the ring */
+        }
+
+        /* Focus for utility buttons (remains as previously defined and suitable) */
+        #copyButton:focus, #pasteButton:focus, #clearButton:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(219, 39, 119, 0.5); /* pink-500 with opacity (50%) */
+        }
+        /* --- END OF UPDATED FOCUS STYLES --- */
+
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-cyan-500 selection:text-white">
+<body class="bg-gradient-to-br from-slate-900 via-purple-950 to-indigo-950 text-slate-200 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-pink-500 selection:text-white">
 
-    <div class="bg-white/10 backdrop-blur-lg shadow-[0_0_20px_5px_rgba(14,165,233,0.4)] rounded-xl p-6 md:p-10 w-full max-w-3xl space-y-8 transform transition-all duration-500 border border-white/20">
-        
-        <header class="text-center">
-            <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300 mb-2">
-                <i class="fas fa-rocket mr-2"></i>PolishIQ
-            </h1>
-            <p class="text-slate-300 text-sm font-medium">
-            </p>
-        </header>
-
-        <div id="error-message-container" class="hidden bg-red-500/20 border border-red-700 text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-            <strong class="font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Error:</strong>
-            <span id="error-message" class="block sm:inline">Something went wrong.</span>
-        </div>
-
-        <main class="space-y-6">
-            <div>
-                
-                <div class="flex justify-between mb-2">
-                    <button id="pasteButton" title="Paste from Clipboard" class="p-2 text-slate-300 hover:text-cyan-300 transition-colors duration-150 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400/50">
-                        <i class="fas fa-paste text-lg mr-2"></i>paste
-                    </button>
-                    <button id="clearButton" title="Clear Input" class="p-2 text-slate-300 hover:text-cyan-300 transition-colors duration-150 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400/50">
-                        <i class="fas fa-times text-lg mr-2"></i>clear
-                    </button>
-                </div>
-                <div class="relative">
-                    <textarea id="inputText" rows="6" class="w-full p-4 rounded-lg bg-slate-600/50 text-white border border-white/30 focus:border-cyan-400/50 transition-colors duration-150 placeholder-slate-300 resize-y" placeholder="Enter your text here..."></textarea>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <div class="flex items-center justify-center space-x-4">
-                    <select id="enhanceMode" class="px-4 py-2 bg-slate-600/50 text-white border border-white/30 rounded-lg focus:border-cyan-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50">
-                        <option value="formal">Formal</option>
-                        <option value="simplify">Simplify</option>
-                        <option value="creative">Creative</option>
-                        <option value="concise">Concise</option>
-                    </select>
-                    <button id="enhanceButton" class="shine-button relative group px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-cyan-400/50 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300/50 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <i id="buttonIcon" class="fas fa-wand-magic-sparkles text-lg"></i>
-                        </span>
-                        Enhance Text
-                    </button>
-                </div>
-            </div>
+    <div class="aurora-border-container w-full max-w-3xl shadow-2xl shadow-purple-900/30">
+        <div class="bg-slate-800/90 backdrop-blur-2xl p-6 md:p-10 w-full space-y-8 transform transition-all duration-500">
             
-            <div>
-                
-                <div class="relative">
-                    <textarea id="outputText" rows="6" class="w-full p-4 rounded-lg bg-slate-600/50 text-white border border-white/30 transition-colors duration-150 placeholder-slate-300 resize-y caret-transparent" placeholder="Enhanced Text will appear here" readonly></textarea>
-                    <!-- Skeleton loader for output text -->
-                    <div id="outputSkeleton" class="absolute inset-0 p-4 space-y-2 bg-slate-600/50 rounded-lg hidden">
-                        <div class="h-4 bg-white/20 rounded w-full skeleton-loader"></div>
-                        <div class="h-4 bg-white/20 rounded w-5/6 skeleton-loader" style="animation-delay: 0.1s;"></div>
-                        <div class="h-4 bg-white/20 rounded w-3/4 skeleton-loader" style="animation-delay: 0.2s;"></div>
-                    </div>
+            <header class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-fuchsia-500 to-purple-500 mb-2 flex items-center justify-center">
+                    <i class="fas fa-rocket mr-3 text-fuchsia-400 text-3xl md:text-4xl transform -rotate-12"></i>PolishIQ
+                </h1>
+                <p class="text-slate-400 text-sm md:text-base font-medium">
+                    AI-Powered Text Refinement for Clarity, Impact, and Precision.
+                </p>
+            </header>
 
-                    <button id="copyButton" title="Copy to Clipboard" class="absolute top-2 right-2 p-2 text-slate-300 hover:text-cyan-300 transition-colors duration-150 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400/50">
-                        <i class="fas fa-copy text-lg"></i>
-                    </button>
-                </div>
+            <div id="error-message-container" class="hidden bg-red-700/30 border border-red-600/70 text-red-300 px-4 py-3 rounded-lg relative transition-all duration-300" role="alert">
+                <strong class="font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Error:</strong>
+                <span id="error-message" class="block sm:inline">Something went wrong.</span>
             </div>
-        </main>
-        
-        <footer class="text-center mt-8">
-            <p class="text-xs text-slate-300">
-            </p>
-        </footer>
+
+            <main class="space-y-6">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="inputText" class="text-sm font-medium text-slate-300">Your Text:</label>
+                        <div>
+                            <button id="pasteButton" title="Paste from Clipboard" class="px-3 py-1.5 text-xs text-slate-400 hover:text-pink-400 transition-colors duration-150 rounded-md hover:bg-slate-700/60 active:bg-slate-700/80">
+                                <i class="fas fa-paste text-sm mr-1"></i>Paste
+                            </button>
+                            <button id="clearButton" title="Clear Input" class="ml-2 px-3 py-1.5 text-xs text-slate-400 hover:text-pink-400 transition-colors duration-150 rounded-md hover:bg-slate-700/60 active:bg-slate-700/80">
+                                <i class="fas fa-times text-sm mr-1"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <textarea id="inputText" rows="6" class="w-full p-4 rounded-lg bg-slate-700 text-slate-100 border border-slate-600 transition-all duration-150 placeholder-slate-400 resize-y"></textarea>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <select id="enhanceMode" class="w-full sm:w-auto px-4 py-3 bg-slate-700 text-slate-100 border border-slate-600 rounded-lg appearance-none custom-select-arrow">
+                            <option value="formal">Formalize</option>
+                            <option value="simplify">Simplify</option>
+                            <option value="creative">Make Creative</option>
+                            <option value="concise">Make Concise</option>
+                        </select>
+                        <button id="enhanceButton" class="w-full sm:w-auto shine-button relative group px-8 py-3 bg-gradient-to-r from-pink-500 via-fuchsia-600 to-purple-600 hover:from-pink-600 hover:via-fuchsia-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-fuchsia-500/40 transition-all duration-300 transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+                            <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+                                <i id="buttonIcon" class="fas fa-wand-magic-sparkles text-lg"></i>
+                            </span>
+                            Enhance Text
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                         <label for="outputText" class="text-sm font-medium text-slate-300">Enhanced Text:</label>
+                    </div>
+                    <div class="relative">
+                        <textarea id="outputText" rows="6" class="w-full p-4 rounded-lg bg-slate-700 text-slate-100 border border-slate-600 transition-all duration-150 placeholder-slate-400 resize-y caret-transparent" readonly></textarea>
+                        <div id="outputSkeleton" class="absolute inset-0 p-4 space-y-3 bg-slate-700/80 rounded-lg hidden">
+                            <div class="h-4 bg-slate-600/70 rounded w-full skeleton-loader"></div>
+                            <div class="h-4 bg-slate-600/70 rounded w-5/6 skeleton-loader" style="animation-delay: 0.1s;"></div>
+                            <div class="h-4 bg-slate-600/70 rounded w-3/4 skeleton-loader" style="animation-delay: 0.2s;"></div>
+                            <div class="h-4 bg-slate-600/70 rounded w-4/6 skeleton-loader" style="animation-delay: 0.3s;"></div>
+                        </div>
+
+                        <button id="copyButton" title="Copy to Clipboard" class="absolute top-3 right-3 p-2 text-slate-400 hover:text-pink-400 transition-colors duration-150 rounded-md hover:bg-slate-600/50 active:bg-slate-600/70">
+                            <i class="fas fa-copy text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </main>
+            
+            <footer class="text-center mt-6 pt-6 border-t border-slate-700/50">
+                <p class="text-xs text-slate-500">
+                    © <span id="currentYear"></span> PolishIQ. Designed with <i class="fas fa-heart text-pink-500 transition-transform hover:scale-125 inline-block"></i> & AI.
+                </p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 space-y-3 z-[100]">
     </div>
 
     <script>
-        const API_KEY = "AIzaSyDSF270Y1VJf1fe4G8ZAuw7bOITbAlal74"; // As provided
-        const MODEL_NAME = "gemini-2.0-flash"; // As provided
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        const API_KEY = "AIzaSyDSF270Y1VJf1fe4G8ZAuw7bOITbAlal74"; 
+        const MODEL_NAME = "gemini-2.0-flash"; 
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
 
         const inputTextElem = document.getElementById('inputText');
@@ -159,17 +233,15 @@
         const outputSkeleton = document.getElementById('outputSkeleton');
 
         inputTextElem.addEventListener('input', () => {
-            // Clear output when input is cleared
             if (!inputTextElem.value.trim()) {
                 outputTextElem.value = '';
             }
         });
 
-        // Add Enter key press event listener
         inputTextElem.addEventListener('keypress', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevent default newline
-                enhanceButton.click(); // Trigger enhance button click
+                event.preventDefault(); 
+                enhanceButton.click(); 
             }
         });
 
@@ -178,39 +250,39 @@
 
             if (!textToEnhance) {
                 showError("Input text cannot be empty.");
+                showToast("Input text cannot be empty.", "error");
                 return;
             }
 
-            // UI updates for loading state
             enhanceButton.disabled = true;
             buttonIcon.classList.remove('fa-wand-magic-sparkles');
             buttonIcon.classList.add('fa-spinner', 'fa-spin');
             errorMessageContainer.classList.add('hidden');
-            outputTextElem.value = ''; // Clear previous output
-            outputTextElem.placeholder = ''; // Hide placeholder
-            outputSkeleton.style.display = 'block'; // Show skeleton loader
+            outputTextElem.value = ''; 
+            outputTextElem.placeholder = ''; 
+            outputSkeleton.style.display = 'block'; 
 
             const enhanceMode = document.getElementById('enhanceMode').value;
                 let prompt = '';
                 switch(enhanceMode) {
                     case 'formal':
-                        prompt = `Enhance the following text to make it more professional without changing its length significantly or altering its core meaning. Maintain the same language as the original text: "${textToEnhance}"`;
+                        prompt = `Rephrase the following text to be more formal and professional. Maintain the original meaning and approximate length. Output only the rephrased text, without any introductory phrases or explanations. Original text: "${textToEnhance}"`;
                         break;
                     case 'simplify':
                         prompt = `Directly simplify the following text. Your goal is to make it very easy to understand for anyone. This means you must:
 1. Replace any difficult or complex words with much simpler, common alternatives.
 2. Break down all long sentences into short, clear, and easy-to-follow sentences.
 3. Ensure the core meaning and main idea of the original text are preserved but presented in the simplest possible way.
-Important: Your entire output should ONLY be the simplified text itself. Do not include any introductory phrases (like "Here's a simplified version:"), headings (like "Main idea:" or "Instructions:"), explanations of your process, or any other text before or after the simplified content. "${textToEnhance}"`;
+Important: Your entire output should ONLY be the simplified text itself. Do not include any introductory phrases (like "Here's a simplified version:"), headings (like "Main idea:" or "Instructions:"), explanations of your process, or any other text before or after the simplified content. Original text: "${textToEnhance}"`;
                         break;
                     case 'creative':
-                        prompt = `Enhance this text creatively using vivid language, metaphors and similes while maintaining the original meaning, without any introductory text: "${textToEnhance}"`;
+                        prompt = `Rewrite this text using more vivid, imaginative, and engaging language. Employ literary devices like metaphors or similes where appropriate, but ensure the core meaning is preserved. Output only the creatively enhanced text, without any introductory phrases. Original text: "${textToEnhance}"`;
                         break;
                     case 'concise':
-                        prompt = `Shorten the following text while retaining the main points. Make it more concise without losing essential information. Maintain the same language as the original text: "${textToEnhance}"`;
+                        prompt = `Make the following text more concise by removing redundant words and phrases, and restructuring sentences for brevity, while retaining all key information and the original meaning. Output only the condensed text, without any introductory phrases. Original text: "${textToEnhance}"`;
                         break;
                     default:
-                        prompt = `Enhance the following text to make it more professional without changing its length significantly or altering its core meaning. Maintain the same language as the original text: "${textToEnhance}"`;
+                        prompt = `Rephrase the following text to be more formal and professional. Maintain the original meaning and approximate length. Output only the rephrased text, without any introductory phrases or explanations. Original text: "${textToEnhance}"`;
                 }
 
             const requestBody = {
@@ -223,7 +295,7 @@ Important: Your entire output should ONLY be the simplified text itself. Do not 
                     temperature: 0.7,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 1024,
                 }
             };
 
@@ -237,15 +309,19 @@ Important: Your entire output should ONLY be the simplified text itself. Do not 
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: { message: "Unknown API error" } }));
+                    const errorData = await response.json().catch(() => ({ error: { message: "Unknown API error or non-JSON response." } }));
                     console.error('API Error Data:', errorData);
                     let detail = "Please check console for details.";
                     if (errorData && errorData.error && errorData.error.message) {
                         detail = errorData.error.message;
                          if (detail.includes("API key not valid")) {
                             detail = "The provided API key is not valid. Please check the key and try again. (This is a placeholder key from the prompt, actual calls will fail).";
-                        } else if (response.status === 404 && detail.includes("models/gemini-2.0-flash")) {
-                            detail = "The model 'gemini-2.0-flash' was not found. This might be a placeholder model name. (API call failed due to invalid model).";
+                        } else if (response.status === 404 && detail.includes(`models/${MODEL_NAME}`)) {
+                            detail = `The model '${MODEL_NAME}' was not found. This might be an issue with the model name or availability. (API call failed due to invalid model).`;
+                        } else if (response.status === 400 && detail.toLowerCase().includes("billing")){
+                            detail = "API request failed due to a billing issue. Please check your Google Cloud project's billing status.";
+                        } else if (response.status === 400 && detail.toLowerCase().includes("field generationconfig.safety")){
+                             detail = "API request failed: Invalid safety settings configuration. Please check the safetySettings format or remove them to use defaults.";
                         }
                     }
                     throw new Error(`API request failed with status ${response.status}. ${detail}`);
@@ -255,67 +331,75 @@ Important: Your entire output should ONLY be the simplified text itself. Do not 
                 
                 if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
                     const enhancedText = data.candidates[0].content.parts[0].text;
-                    outputTextElem.value = enhancedText;
+                    outputTextElem.value = enhancedText.trim();
                 } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-                    // Handle cases where content is blocked due to safety settings or other reasons
                     let reason = data.promptFeedback.blockReason;
                     let safetyRatingsInfo = "";
                     if (data.promptFeedback.safetyRatings && data.promptFeedback.safetyRatings.length > 0) {
-                       safetyRatingsInfo = data.promptFeedback.safetyRatings.map(r => `${r.category}: ${r.probability}`).join(', ');
+                       safetyRatingsInfo = data.promptFeedback.safetyRatings.map(r => `${r.category.replace('HARM_CATEGORY_', '')}: ${r.probability}`).join(', ');
                     }
-                    showError(`Content generation blocked. Reason: ${reason}. ${safetyRatingsInfo ? 'Details: ' + safetyRatingsInfo : ''}`);
+                    const blockMessage = `Content generation blocked. Reason: ${reason}. ${safetyRatingsInfo ? 'Details: ' + safetyRatingsInfo : ''}`;
+                    showError(blockMessage);
+                    showToast(blockMessage, 'error', 5000);
                     outputTextElem.value = '';
                 } 
                 else {
                     console.error('Unexpected API response structure:', data);
-                    showError("Received an unexpected response from the AI. The enhanced text could not be extracted.");
+                    const unexpectedMessage = "Received an unexpected response from the AI. The enhanced text could not be extracted.";
+                    showError(unexpectedMessage);
+                    showToast(unexpectedMessage, 'error');
                     outputTextElem.value = '';
                 }
 
             } catch (error) {
                 console.error('Fetch Error:', error);
-                showError(error.message || "An unexpected error occurred. Please try again.");
-                outputTextElem.value = ''; // Clear output on error
-                updateOutputCharCount();
+                const fetchErrMessage = error.message || "An unexpected error occurred. Please try again.";
+                showError(fetchErrMessage);
+                showToast(fetchErrMessage, 'error', 5000);
+                outputTextElem.value = '';
             } finally {
-                // Restore button and icon, hide skeleton
                 enhanceButton.disabled = false;
                 buttonIcon.classList.remove('fa-spinner', 'fa-spin');
                 buttonIcon.classList.add('fa-wand-magic-sparkles');
                 outputSkeleton.style.display = 'none';
-                outputTextElem.placeholder = 'Enhanced Text will appear here'; // Restore placeholder
+                outputTextElem.placeholder = 'Enhanced Text will appear here';
             }
         });
 
         copyButton.addEventListener('click', () => {
             if (!outputTextElem.value) {
-                showTemporaryMessage(copyButton, "Nothing to copy!", 1500);
+                showToast("Nothing to copy!", "info");
                 return;
             }
             navigator.clipboard.writeText(outputTextElem.value)
                 .then(() => {
-                    showTemporaryMessage(copyButton, "Copied!", 1500);
+                    showToast("Copied to clipboard!", "success");
                 })
                 .catch(err => {
                     console.error('Failed to copy: ', err);
-                    showTemporaryMessage(copyButton, "Copy failed!", 1500);
+                    showToast("Copy failed! Check console.", "error");
                 });
         });
         
         clearButton.addEventListener('click', () => {
             inputTextElem.value = '';
             outputTextElem.value = '';
-            showTemporaryMessage(clearButton, "Cleared!", 1500);
+            errorMessageContainer.classList.add('hidden'); 
+            showToast("Input cleared!", "success");
         });
         
         pasteButton.addEventListener('click', async () => {
             try {
                 const text = await navigator.clipboard.readText();
-                inputTextElem.value = text;
-                showTemporaryMessage(pasteButton, "Pasted!", 1500);
+                if (text) {
+                    inputTextElem.value = text;
+                    showToast("Pasted from clipboard!", "success");
+                } else {
+                    showToast("Clipboard is empty or paste permission denied.", "info");
+                }
             } catch (err) {
                 console.error('Failed to paste: ', err);
-                showTemporaryMessage(pasteButton, "Paste failed!", 1500);
+                showToast("Paste failed! Check console/permissions.", "error");
             }
         });
 
@@ -324,26 +408,49 @@ Important: Your entire output should ONLY be the simplified text itself. Do not 
             errorMessageContainer.classList.remove('hidden');
         }
 
-        function showTemporaryMessage(element, message, duration) {
-            const originalIcon = element.innerHTML;
-            const originalTitle = element.title;
-            element.innerHTML = `<i class="fas fa-check text-green-400"></i>`;
-            element.title = message;
+        function showToast(message, type = 'info', duration = 3000) {
+            const toastContainer = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
             
-            // Simple tooltip-like message for copy status
-            const msgElem = document.createElement('span');
-            msgElem.textContent = message;
-            msgElem.className = 'absolute -top-8 right-0 bg-slate-600 text-xs text-white px-2 py-1 rounded-md shadow-lg whitespace-nowrap';
-            element.parentElement.appendChild(msgElem);
+            let bgColor, iconHtml, textColor = 'text-white';
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-600/90 backdrop-blur-md border-green-500';
+                    iconHtml = '<i class="fas fa-check-circle mr-3"></i>';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-600/90 backdrop-blur-md border-red-500';
+                    iconHtml = '<i class="fas fa-times-circle mr-3"></i>';
+                    break;
+                case 'info':
+                default:
+                    bgColor = 'bg-sky-600/90 backdrop-blur-md border-sky-500';
+                    iconHtml = '<i class="fas fa-info-circle mr-3"></i>';
+                    break;
+            }
+
+            const toastElement = document.createElement('div');
+            toastElement.id = toastId;
+            toastElement.className = `flex items-center w-full max-w-xs p-4 rounded-lg shadow-2xl ${textColor} ${bgColor} border transform toast-enter`;
+            toastElement.innerHTML = `${iconHtml}<span class="text-sm font-medium">${message}</span>`;
+            
+            toastContainer.appendChild(toastElement);
+
+            requestAnimationFrame(() => {
+                 toastElement.classList.add('toast-enter-active');
+            });
 
             setTimeout(() => {
-                element.innerHTML = originalIcon;
-                element.title = originalTitle;
-                msgElem.remove();
+                toastElement.classList.remove('toast-enter-active');
+                toastElement.classList.add('toast-exit');
+                requestAnimationFrame(() => {
+                     toastElement.classList.add('toast-exit-active');
+                });
+                setTimeout(() => {
+                    toastElement.remove();
+                }, 300); 
             }, duration);
         }
-
-
     </script>
 
 </body>
